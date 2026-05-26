@@ -20,7 +20,7 @@
         <h1>个人设置</h1>
         <form method="POST" enctype="multipart/form-data">
             <div class="form-group" style="text-align:center">
-                <img src="{{ user.avatar }}" class="avatar-preview" alt="头像" id="avatarPreview" onerror="this.style.display='none'">
+                <img src="/avatar/{{ user.id }}" class="avatar-preview" alt="头像" id="avatarPreview" onerror="this.style.display='none'">
                 <br>
                 <label for="avatar" style="cursor:pointer;color:var(--rose-light);font-size:14px">更换头像</label>
                 <input type="file" name="avatar" id="avatar" accept="image/*" style="display:none" onchange="previewAvatar()">

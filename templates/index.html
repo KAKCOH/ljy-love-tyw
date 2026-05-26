@@ -49,7 +49,7 @@
         {% if user %}
         <a href="/admin">管理</a>
         <a href="/settings">
-            <img src="{{ user.avatar }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
+            <img src="/avatar/{{ user.id }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
         </a>
         <a href="/logout" class="btn btn-outline btn-sm">退出</a>
         {% else %}
@@ -123,7 +123,7 @@
                     <div class="tape t2"></div>
                     <div class="tape t3"></div>
                     <div class="tape t4"></div>
-                    <img src="/static/uploads/photos/{{ p.filename }}" alt="{{ p.caption }}" loading="lazy">
+                    <img src="/photo/{{ p.id }}" alt="{{ p.caption }}" loading="lazy">
                 </div>
                 <div class="postcard-body">
                     <div class="postcard-stamp">❤</div>
@@ -134,7 +134,7 @@
                         <span class="line"></span><span class="line"></span><span class="line"></span>
                     </div>
                     {% endif %}
-                    <div class="postcard-date">{{ p.created_at[:10] }}</div>
+                    <div class="postcard-date">{{ p.created_at|datestr }}</div>
                 </div>
             </div>
         </div>
@@ -151,10 +151,10 @@
     <div class="message-board">
         {% for m in messages %}
         <div class="msg-row {% if user and m.user_id == user.id %}me{% endif %}">
-            <img src="{{ m.avatar }}" class="msg-avatar" alt="" onerror="this.style.display='none'">
+            <img src="/avatar/{{ m.user_id }}" class="msg-avatar" alt="" onerror="this.style.display='none'">
             <div>
                 <div class="msg-bubble">{{ m.content }}</div>
-                <div class="msg-meta">{{ m.nickname }} · {{ m.created_at[:16] }}</div>
+                <div class="msg-meta">{{ m.nickname }} · {{ m.created_at|datetimestr }}</div>
             </div>
         </div>
         {% else %}
