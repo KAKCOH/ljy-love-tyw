@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 · LJY ❤ TYW</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <h1>❤️</h1>
+        <p>LJY & TYW 的世界</p>
+        {% if error %}
+        <div class="login-error">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <input type="text" name="username" placeholder="账号" required>
+            <input type="password" name="password" placeholder="密码" required>
+            <button type="submit" class="btn btn-primary">进入</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

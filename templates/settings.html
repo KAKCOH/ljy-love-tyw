@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 · Love you day and night</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="/">返回首页</a>
+    </div>
+</nav>
+
+<div class="settings-wrapper">
+    <div class="settings-card">
+        <h1>个人设置</h1>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group" style="text-align:center">
+                <img src="{{ user.avatar }}" class="avatar-preview" alt="头像" id="avatarPreview" onerror="this.style.display='none'">
+                <br>
+                <label for="avatar" style="cursor:pointer;color:var(--rose-light);font-size:14px">更换头像</label>
+                <input type="file" name="avatar" id="avatar" accept="image/*" style="display:none" onchange="previewAvatar()">
+            </div>
+            <div class="form-group">
+                <label>昵称</label>
+                <input type="text" name="nickname" value="{{ user.nickname }}" placeholder="你的昵称">
+            </div>
+            <div class="form-group">
+                <label>新密码（留空不修改）</label>
+                <input type="password" name="password" placeholder="留空则不修改密码">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:14px">保存</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewAvatar() {
+    const file = document.getElementById('avatar').files[0];
+    if (file) {
+        document.getElementById('avatarPreview').src = URL.createObjectURL(file);
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+lovetimeline.db
+static/uploads/photos/*
+static/uploads/avatars/*
+!static/uploads/photos/.gitkeep
+!static/uploads/avatars/.gitkeep
+.env
+.superpowers/
+docs/superpowers/

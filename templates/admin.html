@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理 · Love you day and night</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="/">返回首页</a>
+        <a href="/settings">
+            <img src="{{ user.avatar }}" class="nav-avatar" alt="" onerror="this.style.display='none'">
+        </a>
+    </div>
+</nav>
+
+<div class="admin-wrapper">
+
+    <div class="admin-section">
+        <h2>纪念日</h2>
+        <form method="POST" action="/admin/anniversary/add">
+            <input type="text" name="title" placeholder="名称" required style="flex:1;min-width:200px">
+            <input type="date" name="date" required>
+            <button type="submit" class="btn btn-primary btn-sm">添加</button>
+        </form>
+        {% for a in anniversaries %}
+        <div class="admin-list-item">
+            <span>{{ a.title }} <span class="meta">{{ a.date }}</span></span>
+            <form method="POST" action="/admin/anniversary/delete/{{ a.id }}" style="margin:0">
+                <button type="submit" class="btn btn-danger btn-sm">删除</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="admin-section">
+        <h2>时光轴</h2>
+        <form method="POST" action="/admin/timeline/add">
+            <input type="date" name="date" required>
+            <input type="text" name="title" placeholder="事件标题" required style="flex:1;min-width:160px">
+            <input type="text" name="description" placeholder="描述（可选）" style="flex:2;min-width:200px">
+            <button type="submit" class="btn btn-primary btn-sm">添加</button>
+        </form>
+        {% for t in timelines %}
+        <div class="admin-list-item">
+            <span>{{ t.title }} <span class="meta">{{ t.date }}</span></span>
+            <form method="POST" action="/admin/timeline/delete/{{ t.id }}" style="margin:0">
+                <button type="submit" class="btn btn-danger btn-sm">删除</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="admin-section">
+        <h2>照片墙</h2>
+        <form method="POST" action="/admin/photo/add" enctype="multipart/form-data">
+            <input type="file" name="photo" accept="image/*" required>
+            <input type="text" name="caption" placeholder="配文（可选）" style="flex:1;min-width:160px">
+            <button type="submit" class="btn btn-primary btn-sm">上传</button>
+        </form>
+        {% for p in photos %}
+        <div class="admin-list-item">
+            <span>
+                <img src="/static/uploads/photos/{{ p.filename }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;margin-right:8px;vertical-align:middle">
+                {{ p.caption or p.filename }}
+                <span class="meta">{{ p.created_at[:10] }}</span>
+            </span>
+            <form method="POST" action="/admin/photo/delete/{{ p.id }}" style="margin:0">
+                <button type="submit" class="btn btn-danger btn-sm">删除</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>

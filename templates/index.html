@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Love you day and night · 我们的时光</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+</head>
+<body>
+
+<!-- Floating hearts (CSS only) -->
+<div class="floating-hearts">
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+</div>
+
+<!-- Classical poetry background -->
+<div class="poetry-bg">
+    <span class="poem p1">玲珑骰子安红豆<br>入骨相思知不知</span>
+    <span class="poem p2">似此星辰非昨夜<br>为谁风露立中宵</span>
+    <span class="poem p3">若似月轮终皎洁<br>不辞冰雪为卿热</span>
+    <span class="poem p4">换我心 为你心<br>始知相忆深</span>
+    <span class="poem p5">天涯地角有穷时<br>只有相思无尽处</span>
+    <span class="poem p6">相思相见知何日<br>此时此夜难为情</span>
+    <span class="poem p7">落花人独立<br>微雨燕双飞</span>
+    <span class="poem p8">忆君心似西江水<br>日夜东流无歇时</span>
+</div>
+
+<!-- Canvas particle system -->
+<canvas id="particlesCanvas"></canvas>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="#timeline">时光轴</a>
+        <a href="#photos">照片</a>
+        <a href="#messages">留言</a>
+        {% if user %}
+        <a href="/admin">管理</a>
+        <a href="/settings">
+            <img src="{{ user.avatar }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
+        </a>
+        <a href="/logout" class="btn btn-outline btn-sm">退出</a>
+        {% else %}
+        <a href="/login" class="btn btn-primary btn-sm">登录</a>
+        {% endif %}
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-initials">
+        LJY<span class="hero-heart">❤</span>TYW
+    </div>
+    <p class="hero-subtitle">有 你 的 每 一 天，都 是 最 好 的 时 光</p>
+
+    <!-- 在一起天数 -->
+    <div class="days-card">
+        <div class="days-number">{{ days_together }}</div>
+        <div class="days-label">天 · 在一起</div>
+        <div class="days-date">从 {{ together }} 至今</div>
+    </div>
+
+    <!-- 倒数 -->
+    <div class="countdown-row">
+        {% if countdown_days is not none %}
+        <div class="countdown-card special">
+            <div class="countdown-num">{{ countdown_days }}</div>
+            <div class="countdown-label">距离「{{ countdown_title }}」</div>
+        </div>
+        {% endif %}
+        <div class="countdown-card">
+            <div class="countdown-num">{{ b1_days }}</div>
+            <div class="countdown-label">{{ boy.name }} 的生日<br>满 {{ b1_age }} 岁</div>
+            <div class="countdown-zodiac">{{ b1_zemoji }} {{ b1_zodiac }}</div>
+        </div>
+        <div class="countdown-card">
+            <div class="countdown-num">{{ b2_days }}</div>
+            <div class="countdown-label">{{ girl.name }} 的生日<br>满 {{ b2_age }} 岁</div>
+            <div class="countdown-zodiac">{{ b2_zemoji }} {{ b2_zodiac }}</div>
+        </div>
+    </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section" id="timeline">
+    <h2 class="section-title">时 光 轴</h2>
+    <div class="timeline-list">
+        {% for t in timelines %}
+        <div class="timeline-item">
+            <div class="timeline-date">{{ t.date }}</div>
+            <div class="timeline-title">{{ t.title }}</div>
+            {% if t.description %}<div class="timeline-desc">{{ t.description }}</div>{% endif %}
+        </div>
+        {% else %}
+        <p style="text-align:center;color:var(--text-dim);font-size:14px">还没有记录，登录后添加吧</p>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- PHOTOS / POSTCARDS -->
+<section class="section" id="photos">
+    <h2 class="section-title">我 们 的 瞬 间</h2>
+    {% if photos %}
+    <div class="postcard-book">
+        {% for p in photos %}
+        <div class="postcard">
+            <div class="postcard-inner">
+                <div class="postcard-photo">
+                    <div class="tape t1"></div>
+                    <div class="tape t2"></div>
+                    <div class="tape t3"></div>
+                    <div class="tape t4"></div>
+                    <img src="/static/uploads/photos/{{ p.filename }}" alt="{{ p.caption }}" loading="lazy">
+                </div>
+                <div class="postcard-body">
+                    <div class="postcard-stamp">❤</div>
+                    {% if p.caption %}
+                    <p class="postcard-caption">{{ p.caption }}</p>
+                    {% else %}
+                    <div class="postcard-lines">
+                        <span class="line"></span><span class="line"></span><span class="line"></span>
+                    </div>
+                    {% endif %}
+                    <div class="postcard-date">{{ p.created_at[:10] }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-hint">还没有照片，登录后上传吧</p>
+    {% endif %}
+</section>
+
+<!-- MESSAGES -->
+<section class="section" id="messages">
+    <h2 class="section-title">想 对 你 说</h2>
+    <div class="message-board">
+        {% for m in messages %}
+        <div class="msg-row {% if user and m.user_id == user.id %}me{% endif %}">
+            <img src="{{ m.avatar }}" class="msg-avatar" alt="" onerror="this.style.display='none'">
+            <div>
+                <div class="msg-bubble">{{ m.content }}</div>
+                <div class="msg-meta">{{ m.nickname }} · {{ m.created_at[:16] }}</div>
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align:center;color:var(--text-dim);font-size:14px">说点什么吧</p>
+        {% endfor %}
+    </div>
+    {% if user %}
+    <form class="msg-form" method="POST" action="/message/send">
+        <input name="content" placeholder="想说点什么..." autocomplete="off" required>
+        <button type="submit">发送</button>
+    </form>
+    {% else %}
+    <p style="text-align:center;margin-top:14px;font-size:14px"><a href="/login" style="color:var(--rose)">登录</a> 后可以留言</p>
+    {% endif %}
+</section>
+
+<script>
+// ── Premium Romantic Particle Background ──
+// Layers: floating lantern-orbs + floating hearts
+(function() {
+    const canvas = document.getElementById('particlesCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, time = 0;
+
+    // ── Color palette: warm champagne → rose → soft white ──
+    const COLORS = [
+        [255, 220, 235], // soft pink-white
+        [248, 200, 215], // blush
+        [240, 175, 195], // rose
+        [232, 155, 175], // deeper rose
+        [255, 235, 242], // champagne
+        [245, 210, 225], // warm pink
+    ];
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+
+    // ═══════════════════════════════════════════
+    // LAYER 1 — Floating Lantern-Orbs
+    // Large, ethereal glowing spheres drifting slowly
+    // ═══════════════════════════════════════════
+    const ORB_COUNT = 12;
+    let orbs = [];
+
+    function createOrb() {
+        const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+        return {
+            x: Math.random() * W,
+            y: Math.random() * H,
+            radius: 60 + Math.random() * 140,
+            vx: (Math.random() - 0.5) * 0.15,
+            vy: (Math.random() - 0.5) * 0.1,
+            color: c,
+            alpha: 0.06 + Math.random() * 0.10,
+            phaseX: Math.random() * Math.PI * 2,
+            phaseY: Math.random() * Math.PI * 2,
+            freqX: 0.0003 + Math.random() * 0.0007,
+            freqY: 0.0002 + Math.random() * 0.0005,
+        };
+    }
+
+    function initOrbs() {
+        orbs = [];
+        for (let i = 0; i < ORB_COUNT; i++) orbs.push(createOrb());
+    }
+
+    function drawOrbs() {
+        for (const o of orbs) {
+            // Organic drift
+            o.x += o.vx + Math.sin(time * o.freqX + o.phaseX) * 0.3;
+            o.y += o.vy + Math.cos(time * o.freqY + o.phaseY) * 0.2;
+            // Wrap around edges
+            if (o.x < -o.radius * 2) o.x = W + o.radius;
+            if (o.x > W + o.radius * 2) o.x = -o.radius;
+            if (o.y < -o.radius * 2) o.y = H + o.radius;
+            if (o.y > H + o.radius * 2) o.y = -o.radius;
+
+            const alpha = o.alpha * (0.6 + 0.4 * Math.sin(time * 0.0004 + o.phaseX));
+            const [r, g, b] = o.color;
+
+            const grd = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.radius);
+            grd.addColorStop(0, `rgba(${r},${g},${b},${alpha})`);
+            grd.addColorStop(0.3, `rgba(${r},${g},${b},${alpha * 0.6})`);
+            grd.addColorStop(0.6, `rgba(${r},${g},${b},${alpha * 0.2})`);
+            grd.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grd;
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, o.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // LAYER 2 — Floating Hearts
+    // Small hearts drifting upward with gentle sway
+    // ═══════════════════════════════════════════
+    const HEART_COUNT = 28;
+    let floatingHearts = [];
+
+    function drawSmallHeart(cx, cy, size, alpha, color) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        const s = size / 22;
+        ctx.scale(s, s);
+        ctx.beginPath();
+        ctx.moveTo(0, 7);
+        ctx.bezierCurveTo(-10, -2, -20, -12, 0, -16);
+        ctx.bezierCurveTo(20, -12, 10, -2, 0, 7);
+        ctx.closePath();
+        // Soft glow
+        ctx.shadowColor = `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
+        ctx.shadowBlur = size * 2.5;
+        ctx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},${alpha})`;
+        ctx.fill();
+        // Second pass for brighter edge
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(${Math.min(255,color[0]+20)},${Math.min(255,color[1]+30)},${Math.min(255,color[2]+30)},${alpha*0.7})`;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function createFloatingHeart(randomY) {
+        const c = COLORS[Math.floor(Math.random() * COLORS.length)];
+        return {
+            x: Math.random() * W,
+            y: randomY ? Math.random() * H : H + Math.random() * 60,
+            size: 4 + Math.random() * 8,
+            vy: -0.2 - Math.random() * 0.6,
+            vx: (Math.random() - 0.5) * 0.2,
+            color: c,
+            alpha: 0,
+            maxAlpha: 0.3 + Math.random() * 0.5,
+            life: 350 + Math.random() * 600,
+            age: randomY ? Math.floor(Math.random() * 600) : 0,
+            wobbleAmp: 0.5 + Math.random() * 2,
+            wobbleFreq: 0.006 + Math.random() * 0.018,
+            rotation: (Math.random() - 0.5) * 0.6,
+        };
+    }
+
+    function initFloatingHearts() {
+        floatingHearts = [];
+        for (let i = 0; i < HEART_COUNT; i++) floatingHearts.push(createFloatingHeart(true));
+    }
+
+    function drawFloatingHearts() {
+        for (let i = 0; i < floatingHearts.length; i++) {
+            const h = floatingHearts[i];
+            h.age++;
+            if (h.age < 40) h.alpha = (h.age / 40) * h.maxAlpha;
+            else if (h.age > h.life - 40) h.alpha = ((h.life - h.age) / 40) * h.maxAlpha;
+            else h.alpha = h.maxAlpha * (0.75 + 0.25 * Math.sin(time * 0.004 + h.age * 0.012));
+
+            h.y += h.vy;
+            h.x += h.vx + Math.sin(time * h.wobbleFreq + h.age * 0.008) * h.wobbleAmp;
+            // Gentle rotation sway
+            h.rotation += (Math.sin(time * h.wobbleFreq + h.age * 0.01) * 0.02);
+
+            if (h.alpha < 0.02) continue;
+            drawSmallHeart(h.x, h.y, h.size, h.alpha, h.color);
+
+            if (h.age > h.life || h.y < -60) {
+                floatingHearts[i] = createFloatingHeart(false);
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════
+    // RENDER LOOP
+    // ═══════════════════════════════════════════
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        drawOrbs();
+        drawFloatingHearts();
+    }
+
+    function animate() {
+        time++;
+        draw();
+        requestAnimationFrame(animate);
+    }
+
+    // ═══════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════
+    resize();
+    initOrbs();
+    initFloatingHearts();
+    window.addEventListener('resize', () => {
+        resize();
+        initOrbs();
+        initFloatingHearts();
+    });
+    animate();
+})();
+</script>
+
+</body>
+</html>
