@@ -270,6 +270,12 @@ def get_current_user():
     return None
 
 # ---------- routes ----------
+@app.route('/sw.js')
+def service_worker():
+    with open(os.path.join(app.static_folder, 'js', 'sw.js'), encoding='utf-8') as f:
+        return Response(f.read(), mimetype='application/javascript')
+
+
 @app.route('/')
 def index():
     anniversaries = db_execute('SELECT * FROM anniversaries ORDER BY date', fetch=True)
