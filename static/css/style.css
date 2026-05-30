@@ -203,7 +203,10 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 40px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-left: max(40px, env(safe-area-inset-left));
+    padding-right: max(40px, env(safe-area-inset-right));
+    padding-bottom: 14px;
     background: rgba(20, 8, 17, 0.85);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -1307,7 +1310,7 @@ nav {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
-    nav { padding: 10px 16px; }
+    nav { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: 10px; }
     .nav-brand { font-size: 20px; letter-spacing: 2px; }
     .nav-links { gap: 14px; }
     .hero { padding: 60px 16px 40px; }
