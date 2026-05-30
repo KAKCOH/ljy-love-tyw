@@ -249,7 +249,33 @@ document.getElementById('specialOverlay').addEventListener('click', function(e) 
 
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+        if ('PushManager' in window && 'Notification' in window) {
+            Notification.requestPermission().then(function(perm) {
+                if (perm !== 'granted') return;
+                reg.pushManager.getSubscription().then(function(sub) {
+                    if (sub) return;
+                    var key = '{{ vapid_public_key }}';
+                    var convKey = function(base64url) {
+                        var pad = '='.repeat((4 - base64url.length % 4) % 4);
+                        var raw = atob(base64url.replace(/-/g, '+').replace(/_/g, '/') + pad);
+                        var out = new Uint8Array(raw.length);
+                        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+                        return out;
+                    };
+                    return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: convKey(key) });
+                }).then(function(sub) {
+                    if (sub) {
+                        fetch('/push/subscribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(sub)
+                        });
+                    }
+                }).catch(function() {});
+            });
+        }
+    });
 }
 </script>
 </body>

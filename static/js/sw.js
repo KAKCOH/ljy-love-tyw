@@ -48,3 +48,34 @@ self.addEventListener('fetch', e => {
     );
   }
 });
+
+self.addEventListener('push', e => {
+  let data = {};
+  if (e.data) {
+    try { data = e.data.json(); } catch (_) { data = { body: e.data.text() }; }
+  }
+  e.waitUntil(
+    self.registration.showNotification(data.title || 'Love Timeline', {
+      body: data.body || '',
+      icon: '/static/icon-192.png',
+      badge: '/static/icon-192.png',
+      vibrate: [200, 100, 200],
+      tag: data.tag || 'msg',
+      renotify: true,
+      data: { url: '/messages' }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windows => {
+      const url = (e.notification.data && e.notification.data.url) || '/messages';
+      for (const w of windows) {
+        if (w.url.includes(url)) { w.focus(); return; }
+      }
+      if (clients.openWindow) clients.openWindow(url);
+    })
+  );
+});

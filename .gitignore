@@ -6,5 +6,6 @@ static/uploads/avatars/*
 !static/uploads/photos/.gitkeep
 !static/uploads/avatars/.gitkeep
 .env
+.vapid_keys
 .superpowers/
 docs/superpowers/
