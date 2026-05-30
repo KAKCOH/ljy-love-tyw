@@ -217,15 +217,16 @@ nav {
     font-size: 14px;
 }
 .nav-brand {
-    font-family: var(--serif);
-    font-size: 26px;
-    font-weight: 300;
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 400;
+    text-decoration: none;
     background: linear-gradient(135deg, var(--rose-light) 0%, var(--rose-soft) 40%, var(--rose) 70%, var(--rose-light) 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: 4px;
+    letter-spacing: 2px;
     animation: navShimmer 5s ease-in-out infinite;
 }
 @keyframes navShimmer {
@@ -1311,7 +1312,7 @@ nav {
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
     nav { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: 10px; }
-    .nav-brand { font-size: 20px; letter-spacing: 2px; }
+    .nav-brand { font-size: 18px; letter-spacing: 1px; }
     .nav-links { gap: 14px; }
     .hero { padding: 60px 16px 40px; }
     .hero-initials { font-size: 36px; letter-spacing: 6px; }
