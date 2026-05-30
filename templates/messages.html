@@ -30,36 +30,215 @@
         <p>只有你们两个人看得见</p>
     </div>
 
-    <div class="whisper-messages" id="whisperMessages">
-        {% for m in messages %}
-        <div class="whisper-row {% if m.user_id == user.id %}me{% endif %}">
-            <img src="/avatar/{{ m.user_id }}" class="whisper-avatar" alt="" onerror="this.style.display='none'">
-            <div class="whisper-content">
-                <div class="whisper-bubble">{{ m.content }}</div>
-                <div class="whisper-meta">{{ m.nickname }} · {{ m.created_at|datetimestr }}</div>
+    <!-- Pinned special messages -->
+    {% set active_specials = specials|selectattr('status', 'equalto', 'pending')|list %}
+    {% if active_specials %}
+    <div class="pinned-area">
+        {% for sp in active_specials %}
+        <div class="special-card {{ 'special-meet' if sp.type == 'meet' else 'special-task' }}">
+            <div class="special-card-icon">{{ '💕' if sp.type == 'meet' else '📋' }}</div>
+            <div class="special-card-body">
+                <div class="special-card-label">
+                    {% if sp.from_user_id == user.id %}
+                    你{% if sp.type == 'meet' %}想见对方{% else %}布置了任务{% endif %}
+                    {% else %}
+                    对方{% if sp.type == 'meet' %}想见你{% else %}给你布置了任务{% endif %}
+                    {% endif %}
+                </div>
+                {% if sp.content %}
+                <div class="special-card-content">{{ sp.content }}</div>
+                {% endif %}
+                {% if sp.type == 'meet' and sp.from_user_id != user.id %}
+                <div class="special-card-actions">
+                    <form method="POST" action="/special/respond/{{ sp.id }}" class="meet-form">
+                        <input type="hidden" name="status" value="accepted">
+                        <span class="meet-time-label">见面时间：</span>
+                        <input type="datetime-local" name="meet_time" class="meet-time-input" required>
+                        <button type="submit" class="btn btn-primary btn-sm">同意</button>
+                        <button type="button" class="btn btn-outline btn-sm meet-reject-btn" data-id="{{ sp.id }}">拒绝</button>
+                    </form>
+                    <form method="POST" action="/special/respond/{{ sp.id }}" class="meet-reject-form" id="rejectForm{{ sp.id }}" style="display:none">
+                        <input type="hidden" name="status" value="rejected">
+                    </form>
+                </div>
+                {% elif sp.type == 'meet' and sp.from_user_id == user.id %}
+                <div class="special-card-status">等待对方回应…</div>
+                {% elif sp.type == 'task' and sp.from_user_id != user.id %}
+                <div class="special-card-actions">
+                    <form method="POST" action="/special/done/{{ sp.id }}">
+                        <button type="submit" class="btn btn-primary btn-sm">✓ 完成</button>
+                    </form>
+                </div>
+                {% elif sp.type == 'task' and sp.from_user_id == user.id %}
+                <div class="special-card-status">等待对方完成…</div>
+                {% endif %}
             </div>
         </div>
-        {% else %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Messages list -->
+    <div class="whisper-messages" id="whisperMessages">
+        <!-- Special message history (completed/responded) -->
+        {% set done_specials = specials|rejectattr('status', 'equalto', 'pending')|list %}
+        {% set all_items = [] %}
+        {% for m in messages %}
+            {% if not m.recalled %}
+                {% set _ = all_items.append({'type': 'msg', 'data': m, 'time': m.created_at}) %}
+            {% endif %}
+        {% endfor %}
+        {% for sp in done_specials %}
+            {% set _ = all_items.append({'type': 'special', 'data': sp, 'time': sp.completed_at or sp.created_at}) %}
+        {% endfor %}
+        {% set sorted_items = all_items|sort(attribute='time') %}
+
+        {% if not active_specials and sorted_items|length == 0 %}
         <div class="whisper-empty">
             <div class="whisper-empty-icon">💌</div>
             <p>还没有悄悄话</p>
             <p class="whisper-empty-sub">说点什么吧，只有你们两个人看得见</p>
         </div>
+        {% endif %}
+
+        {% for item in sorted_items %}
+            {% if item.type == 'msg' %}
+            {% set m = item.data %}
+            <div class="whisper-row {% if m.user_id == user.id %}me{% endif %}" data-msg-id="{{ m.id }}">
+                <img src="/avatar/{{ m.user_id }}" class="whisper-avatar" alt="" onerror="this.style.display='none'">
+                <div class="whisper-content">
+                    {% if m.image_data %}
+                    <div class="whisper-bubble image-bubble">
+                        <img src="/message/image/{{ m.id }}" alt="图片" loading="lazy" onclick="this.classList.toggle('zoomed')">
+                    </div>
+                    {% endif %}
+                    {% if m.content %}
+                    <div class="whisper-bubble">{{ m.content }}</div>
+                    {% endif %}
+                    <div class="whisper-meta">
+                        {{ m.nickname }} · {{ m.created_at|datetimestr }}
+                        {% if m.user_id == user.id %}
+                        <button class="recall-btn" onclick="recallMessage({{ m.id }})" title="撤回">×</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% elif item.type == 'special' %}
+            {% set sp = item.data %}
+            <div class="special-history">
+                <div class="special-history-card {{ 'special-meet' if sp.type == 'meet' else 'special-task' }}">
+                    <span class="special-history-icon">{{ '💕' if sp.type == 'meet' else '📋' }}</span>
+                    <span class="special-history-text">
+                        {% if sp.type == 'meet' %}
+                            {% if sp.status == 'accepted' %}
+                            想见你 — 已同意{% if sp.meet_time %}，见面时间：{{ sp.meet_time }}{% endif %}
+                            {% else %}
+                            想见你 — 已拒绝
+                            {% endif %}
+                        {% else %}
+                        任务「{{ sp.content }}」— 已完成 ✓
+                        {% endif %}
+                    </span>
+                    <span class="special-history-time">{{ (sp.completed_at or sp.created_at)|datetimestr }}</span>
+                </div>
+            </div>
+            {% endif %}
         {% endfor %}
     </div>
 
-    <form class="whisper-form" method="POST" action="/message/send">
-        <input name="content" placeholder="说句悄悄话..." autocomplete="off" required>
+    <!-- Toolbar -->
+    <div class="whisper-toolbar">
+        <label class="toolbar-btn" title="发送图片">
+            📷 图片
+            <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="previewImage()">
+        </label>
+        <button class="toolbar-btn" onclick="openOverlay('meet')" title="想见你">💕 想见你</button>
+        <button class="toolbar-btn" onclick="openOverlay('task')" title="有任务">📋 有任务</button>
+        <span id="imagePreviewName" class="image-preview-name"></span>
+    </div>
+
+    <!-- Input form -->
+    <form class="whisper-form" method="POST" action="/message/send" enctype="multipart/form-data" id="msgForm">
+        <input type="file" name="image" id="imageFileInput" accept="image/*" style="display:none" onchange="setImagePreview()">
+        <input name="content" id="contentInput" placeholder="说句悄悄话..." autocomplete="off">
         <button type="submit">发送</button>
     </form>
 </div>
 
+<!-- Special message overlay -->
+<div class="overlay" id="specialOverlay">
+    <div class="overlay-card">
+        <div class="overlay-title" id="overlayTitle"></div>
+        <form method="POST" action="/special/send" id="specialForm">
+            <input type="hidden" name="type" id="specialType">
+            <textarea name="content" id="specialContent" placeholder="" rows="3"></textarea>
+            <div class="overlay-actions">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeOverlay()">取消</button>
+                <button type="submit" class="btn btn-primary btn-sm">发送</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-// Auto-scroll to bottom
+// Auto-scroll
 (function() {
     const el = document.getElementById('whisperMessages');
     if (el) el.scrollTop = el.scrollHeight;
 })();
+
+// Image preview from toolbar
+function previewImage() {
+    const file = document.getElementById('imageInput').files[0];
+    if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('imageFileInput').files = dt.files;
+        document.getElementById('imagePreviewName').textContent = '已选: ' + file.name;
+        document.getElementById('imageInput').value = '';
+    }
+}
+
+function setImagePreview() {
+    const file = document.getElementById('imageFileInput').files[0];
+    if (file) {
+        document.getElementById('imagePreviewName').textContent = '已选: ' + file.name;
+    }
+}
+
+// Recall message
+function recallMessage(id) {
+    if (!confirm('确定撤回这条消息吗？')) return;
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/message/recall/' + id;
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Meet reject button
+document.querySelectorAll('.meet-reject-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (confirm('确定拒绝吗？')) {
+            document.getElementById('rejectForm' + this.dataset.id).submit();
+        }
+    });
+});
+
+// Special message overlay
+function openOverlay(type) {
+    document.getElementById('specialType').value = type;
+    document.getElementById('overlayTitle').textContent = type === 'meet' ? '💕 想见你' : '📋 有任务！';
+    document.getElementById('specialContent').placeholder = type === 'meet' ? '想说什么...（可选）' : '任务内容...（可选）';
+    document.getElementById('specialContent').value = '';
+    document.getElementById('specialOverlay').classList.add('show');
+}
+function closeOverlay() {
+    document.getElementById('specialOverlay').classList.remove('show');
+}
+document.getElementById('specialOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeOverlay();
+});
 </script>
 
 </body>

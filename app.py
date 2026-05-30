@@ -141,6 +141,26 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        # Migrations: add columns if missing
+        for col, dtype in [('recalled', 'INTEGER DEFAULT 0'), ('image_data', 'TEXT DEFAULT NULL'), ('image_mimetype', 'TEXT DEFAULT NULL')]:
+            try:
+                cur.execute(f"ALTER TABLE messages ADD COLUMN {col} {dtype}")
+                db.commit()
+            except Exception:
+                db.rollback()
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS special_messages (
+                id SERIAL PRIMARY KEY,
+                from_user_id INTEGER NOT NULL REFERENCES users(id),
+                to_user_id INTEGER NOT NULL REFERENCES users(id),
+                type TEXT NOT NULL,
+                content TEXT DEFAULT '',
+                meet_time TEXT DEFAULT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP DEFAULT NULL
+            )
+        ''')
         db.commit()
         # Seed users only if not exists
         cur.execute("SELECT COUNT(*) FROM users")
@@ -200,6 +220,29 @@ def init_db():
 
             INSERT OR IGNORE INTO anniversaries (title, date) VALUES
                 ('在一起纪念日', '2025-11-14');
+        ''')
+        db.commit()
+        # Migrations: add columns if missing (for existing DBs)
+        for col_def in ['recalled INTEGER DEFAULT 0', 'image_data TEXT DEFAULT NULL', 'image_mimetype TEXT DEFAULT NULL']:
+            try:
+                db.execute(f"ALTER TABLE messages ADD COLUMN {col_def}")
+                db.commit()
+            except Exception:
+                pass
+        db.execute('''
+            CREATE TABLE IF NOT EXISTS special_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                from_user_id INTEGER NOT NULL,
+                to_user_id INTEGER NOT NULL,
+                type TEXT NOT NULL,
+                content TEXT DEFAULT '',
+                meet_time TEXT DEFAULT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP DEFAULT NULL,
+                FOREIGN KEY (from_user_id) REFERENCES users(id),
+                FOREIGN KEY (to_user_id) REFERENCES users(id)
+            )
         ''')
         db.commit()
         db.close()
@@ -277,7 +320,8 @@ def messages_page():
            JOIN users u ON m.user_id = u.id ORDER BY m.created_at ASC''',
         fetch=True
     )
-    return render_template('messages.html', user=get_current_user(), messages=messages)
+    specials = db_execute('SELECT * FROM special_messages ORDER BY created_at ASC', fetch=True)
+    return render_template('messages.html', user=get_current_user(), messages=messages, specials=specials)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
@@ -395,10 +439,70 @@ def delete_photo(id):
 @login_required
 def send_message():
     content = request.form.get('content', '').strip()
-    if content:
-        db_execute('INSERT INTO messages (user_id, content) VALUES (?, ?)',
-            (session['user_id'], content), commit=True)
-    return redirect(url_for('index'))
+    file = request.files.get('image')
+    image_data = None
+    image_mimetype = None
+    if file and file.filename:
+        ext = file.filename.rsplit('.', 1)[-1].lower()
+        if ext in ('png', 'jpg', 'jpeg', 'gif', 'webp'):
+            image_data = base64.b64encode(file.read()).decode('utf-8')
+            image_mimetype = 'image/png' if ext == 'png' else 'image/jpeg' if ext in ('jpg', 'jpeg') else 'image/' + ext
+    if content or image_data:
+        db_execute('INSERT INTO messages (user_id, content, image_data, image_mimetype) VALUES (?, ?, ?, ?)',
+            (session['user_id'], content or '', image_data, image_mimetype), commit=True)
+    return redirect(url_for('messages_page'))
+
+@app.route('/message/image/<int:mid>')
+@login_required
+def serve_message_image(mid):
+    msg = db_execute('SELECT image_data, image_mimetype FROM messages WHERE id=?', (mid,), fetchone=True)
+    if msg and msg['image_data']:
+        return Response(base64.b64decode(msg['image_data']), mimetype=msg.get('image_mimetype', 'image/jpeg'))
+    return '', 404
+
+@app.route('/message/recall/<int:id>', methods=['POST'])
+@login_required
+def recall_message(id):
+    msg = db_execute('SELECT user_id FROM messages WHERE id=?', (id,), fetchone=True)
+    if msg and msg['user_id'] == session['user_id']:
+        db_execute('UPDATE messages SET recalled=1 WHERE id=?', (id,), commit=True)
+    return redirect(url_for('messages_page'))
+
+def get_other_user_id():
+    users = db_execute('SELECT id FROM users WHERE id!=?', (session['user_id'],), fetch=True)
+    return users[0]['id'] if users else None
+
+@app.route('/special/send', methods=['POST'])
+@login_required
+def send_special():
+    to_id = get_other_user_id()
+    if to_id:
+        db_execute(
+            'INSERT INTO special_messages (from_user_id, to_user_id, type, content) VALUES (?, ?, ?, ?)',
+            (session['user_id'], to_id, request.form['type'], request.form.get('content', '')), commit=True)
+    return redirect(url_for('messages_page'))
+
+@app.route('/special/respond/<int:id>', methods=['POST'])
+@login_required
+def respond_special(id):
+    sp = db_execute('SELECT * FROM special_messages WHERE id=? AND to_user_id=?',
+        (id, session['user_id']), fetchone=True)
+    if sp and sp['type'] == 'meet' and sp['status'] == 'pending':
+        status = request.form['status']
+        meet_time = request.form.get('meet_time', '')
+        db_execute("UPDATE special_messages SET status=?, meet_time=?, completed_at=CURRENT_TIMESTAMP WHERE id=?",
+            (status, meet_time, id), commit=True)
+    return redirect(url_for('messages_page'))
+
+@app.route('/special/done/<int:id>', methods=['POST'])
+@login_required
+def done_special(id):
+    sp = db_execute('SELECT * FROM special_messages WHERE id=? AND to_user_id=?',
+        (id, session['user_id']), fetchone=True)
+    if sp and sp['type'] == 'task' and sp['status'] == 'pending':
+        db_execute("UPDATE special_messages SET status='done', completed_at=CURRENT_TIMESTAMP WHERE id=?",
+            (id,), commit=True)
+    return redirect(url_for('messages_page'))
 
 init_db()
 

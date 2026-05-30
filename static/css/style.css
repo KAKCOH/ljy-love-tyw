@@ -1065,6 +1065,246 @@ nav {
 }
 .whisper-form button:hover { filter: brightness(1.08); box-shadow: 0 6px 22px rgba(224, 136, 152, 0.4); }
 
+/* ===== WHISPER TOOLBAR ===== */
+.whisper-toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 6px 0;
+    flex-shrink: 0;
+}
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(25, 13, 20, 0.6);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.5px;
+}
+.toolbar-btn:hover {
+    border-color: var(--rose);
+    color: var(--rose-light);
+    background: rgba(240, 176, 190, 0.08);
+}
+.image-preview-name {
+    font-size: 12px;
+    color: var(--rose-light);
+    align-self: center;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ===== PINNED SPECIAL CARDS ===== */
+.pinned-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0 12px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(240, 176, 190, 0.08);
+    margin-bottom: 4px;
+}
+.special-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px 18px;
+    border-radius: 16px;
+    animation: msgIn 0.4s ease;
+}
+.special-meet {
+    background: linear-gradient(135deg, rgba(240, 176, 190, 0.15), rgba(240, 176, 190, 0.06));
+    border: 1px solid rgba(240, 176, 190, 0.25);
+}
+.special-task {
+    background: linear-gradient(135deg, rgba(248, 200, 180, 0.12), rgba(240, 180, 140, 0.05));
+    border: 1px solid rgba(248, 200, 180, 0.25);
+}
+.special-card-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+.special-card-body {
+    flex: 1;
+    min-width: 0;
+}
+.special-card-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+.special-card-content {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    white-space: pre-wrap;
+}
+.special-card-actions {
+    margin-top: 6px;
+}
+.special-card-status {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-style: italic;
+}
+.meet-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.meet-time-label {
+    font-size: 12px;
+    color: var(--text-dim);
+}
+.meet-time-input {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(25, 13, 20, 0.8);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--sans);
+    outline: none;
+}
+.meet-time-input:focus {
+    border-color: var(--rose);
+}
+
+/* ===== IMAGE MESSAGE ===== */
+.image-bubble {
+    padding: 6px !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: hidden;
+    border-radius: 16px !important;
+}
+.image-bubble img {
+    display: block;
+    max-width: 260px;
+    max-height: 320px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.3s, max-width 0.3s, max-height 0.3s;
+    object-fit: cover;
+}
+.image-bubble img.zoomed {
+    max-width: 90vw;
+    max-height: 80vh;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.6);
+    border-radius: 16px;
+}
+
+/* ===== RECALL BUTTON ===== */
+.recall-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: rgba(242, 230, 234, 0.35);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 4px;
+    margin-left: 6px;
+    transition: color 0.2s;
+    vertical-align: middle;
+}
+.whisper-row.me .whisper-content:hover .recall-btn {
+    display: inline;
+}
+.recall-btn:hover {
+    color: #e88;
+}
+
+/* ===== SPECIAL HISTORY ===== */
+.special-history {
+    text-align: center;
+    padding: 8px 0;
+}
+.special-history-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+}
+.special-history-card.special-meet {
+    background: rgba(240, 176, 190, 0.06);
+    border: 1px solid rgba(240, 176, 190, 0.12);
+}
+.special-history-card.special-task {
+    background: rgba(248, 200, 180, 0.06);
+    border: 1px solid rgba(248, 200, 180, 0.12);
+}
+.special-history-icon { font-size: 14px; }
+.special-history-time { font-size: 11px; color: rgba(242, 230, 234, 0.25); margin-left: 4px; }
+
+/* ===== OVERLAY ===== */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 150;
+    justify-content: center;
+    align-items: center;
+}
+.overlay.show {
+    display: flex;
+}
+.overlay-card {
+    background: rgba(30, 16, 24, 0.98);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+}
+.overlay-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--rose-light);
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+.overlay-card textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    font-family: var(--sans);
+    outline: none;
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+.overlay-card textarea:focus { border-color: var(--rose); }
+.overlay-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
     nav { padding: 10px 16px; }
@@ -1097,4 +1337,9 @@ nav {
     .whisper-form input { padding: 11px 16px; font-size: 14px; }
     .whisper-form button { padding: 10px 18px; font-size: 13px; }
     .page-section { padding: 40px 16px; }
+    .toolbar-btn { padding: 5px 10px; font-size: 12px; }
+    .image-bubble img { max-width: 200px; max-height: 240px; }
+    .meet-form { gap: 4px; }
+    .meet-time-input { width: 130px; font-size: 12px; }
+    .overlay-card { padding: 24px; }
 }
