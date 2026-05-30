@@ -221,6 +221,8 @@ nav {
     font-size: 22px;
     font-weight: 400;
     text-decoration: none;
+    border: none;
+    color: transparent;
     background: linear-gradient(135deg, var(--rose-light) 0%, var(--rose-soft) 40%, var(--rose) 70%, var(--rose-light) 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;

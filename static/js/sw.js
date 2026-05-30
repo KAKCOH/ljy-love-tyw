@@ -1,4 +1,4 @@
-const CACHE = 'lovetimeline-v1';
+const CACHE = 'lovetimeline-v2';
 const ASSETS = [
   '/',
   '/static/css/style.css',
