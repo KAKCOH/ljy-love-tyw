@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时光轴 · Love you day and night</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+</head>
+<body>
+
+<div class="floating-hearts">
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+</div>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/timeline" class="active">时光轴</a>
+        <a href="/photos">照片</a>
+        {% if user %}
+        <a href="/messages">悄悄话</a>
+        <a href="/admin">管理</a>
+        <a href="/settings">
+            <img src="/avatar/{{ user.id }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
+        </a>
+        <a href="/logout" class="btn btn-outline btn-sm">退出</a>
+        {% else %}
+        <a href="/login" class="btn btn-primary btn-sm">登录</a>
+        {% endif %}
+    </div>
+</nav>
+
+<section class="page-section">
+    <h2 class="section-title">时 光 轴</h2>
+    <div class="timeline-list">
+        {% for t in timelines %}
+        <div class="timeline-item">
+            <div class="timeline-date">{{ t.date }}</div>
+            <div class="timeline-title">{{ t.title }}</div>
+            {% if t.description %}<div class="timeline-desc">{{ t.description }}</div>{% endif %}
+        </div>
+        {% else %}
+        <p class="empty-hint">还没有记录，登录后添加吧</p>
+        {% endfor %}
+    </div>
+</section>
+
+</body>
+</html>

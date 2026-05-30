@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片墙 · Love you day and night</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+</head>
+<body>
+
+<div class="floating-hearts">
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+    <span class="heart">💕</span>
+    <span class="heart">💗</span>
+    <span class="heart">💖</span>
+</div>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/timeline">时光轴</a>
+        <a href="/photos" class="active">照片</a>
+        {% if user %}
+        <a href="/messages">悄悄话</a>
+        <a href="/admin">管理</a>
+        <a href="/settings">
+            <img src="/avatar/{{ user.id }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
+        </a>
+        <a href="/logout" class="btn btn-outline btn-sm">退出</a>
+        {% else %}
+        <a href="/login" class="btn btn-primary btn-sm">登录</a>
+        {% endif %}
+    </div>
+</nav>
+
+<section class="page-section">
+    <h2 class="section-title">我 们 的 瞬 间</h2>
+    {% if photos %}
+    <div class="postcard-book">
+        {% for p in photos %}
+        <div class="postcard">
+            <div class="postcard-inner">
+                <div class="postcard-photo">
+                    <div class="tape t1"></div>
+                    <div class="tape t2"></div>
+                    <div class="tape t3"></div>
+                    <div class="tape t4"></div>
+                    <img src="/photo/{{ p.id }}" alt="{{ p.caption }}" loading="lazy">
+                </div>
+                <div class="postcard-body">
+                    <div class="postcard-stamp">❤</div>
+                    {% if p.caption %}
+                    <p class="postcard-caption">{{ p.caption }}</p>
+                    {% else %}
+                    <div class="postcard-lines">
+                        <span class="line"></span><span class="line"></span><span class="line"></span>
+                    </div>
+                    {% endif %}
+                    <div class="postcard-date">{{ p.created_at|datestr }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-hint">还没有照片，登录后上传吧</p>
+    {% endif %}
+</section>
+
+</body>
+</html>

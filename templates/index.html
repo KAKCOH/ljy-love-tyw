@@ -43,10 +43,10 @@
 <nav>
     <a href="/" class="nav-brand">Love you day and night</a>
     <div class="nav-links">
-        <a href="#timeline">时光轴</a>
-        <a href="#photos">照片</a>
-        <a href="#messages">留言</a>
+        <a href="/timeline">时光轴</a>
+        <a href="/photos">照片</a>
         {% if user %}
+        <a href="/messages">悄悄话</a>
         <a href="/admin">管理</a>
         <a href="/settings">
             <img src="/avatar/{{ user.id }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
@@ -92,83 +92,6 @@
             <div class="countdown-zodiac">{{ b2_zemoji }} {{ b2_zodiac }}</div>
         </div>
     </div>
-</section>
-
-<!-- TIMELINE -->
-<section class="section" id="timeline">
-    <h2 class="section-title">时 光 轴</h2>
-    <div class="timeline-list">
-        {% for t in timelines %}
-        <div class="timeline-item">
-            <div class="timeline-date">{{ t.date }}</div>
-            <div class="timeline-title">{{ t.title }}</div>
-            {% if t.description %}<div class="timeline-desc">{{ t.description }}</div>{% endif %}
-        </div>
-        {% else %}
-        <p style="text-align:center;color:var(--text-dim);font-size:14px">还没有记录，登录后添加吧</p>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- PHOTOS / POSTCARDS -->
-<section class="section" id="photos">
-    <h2 class="section-title">我 们 的 瞬 间</h2>
-    {% if photos %}
-    <div class="postcard-book">
-        {% for p in photos %}
-        <div class="postcard">
-            <div class="postcard-inner">
-                <div class="postcard-photo">
-                    <div class="tape t1"></div>
-                    <div class="tape t2"></div>
-                    <div class="tape t3"></div>
-                    <div class="tape t4"></div>
-                    <img src="/photo/{{ p.id }}" alt="{{ p.caption }}" loading="lazy">
-                </div>
-                <div class="postcard-body">
-                    <div class="postcard-stamp">❤</div>
-                    {% if p.caption %}
-                    <p class="postcard-caption">{{ p.caption }}</p>
-                    {% else %}
-                    <div class="postcard-lines">
-                        <span class="line"></span><span class="line"></span><span class="line"></span>
-                    </div>
-                    {% endif %}
-                    <div class="postcard-date">{{ p.created_at|datestr }}</div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="empty-hint">还没有照片，登录后上传吧</p>
-    {% endif %}
-</section>
-
-<!-- MESSAGES -->
-<section class="section" id="messages">
-    <h2 class="section-title">想 对 你 说</h2>
-    <div class="message-board">
-        {% for m in messages %}
-        <div class="msg-row {% if user and m.user_id == user.id %}me{% endif %}">
-            <img src="/avatar/{{ m.user_id }}" class="msg-avatar" alt="" onerror="this.style.display='none'">
-            <div>
-                <div class="msg-bubble">{{ m.content }}</div>
-                <div class="msg-meta">{{ m.nickname }} · {{ m.created_at|datetimestr }}</div>
-            </div>
-        </div>
-        {% else %}
-        <p style="text-align:center;color:var(--text-dim);font-size:14px">说点什么吧</p>
-        {% endfor %}
-    </div>
-    {% if user %}
-    <form class="msg-form" method="POST" action="/message/send">
-        <input name="content" placeholder="想说点什么..." autocomplete="off" required>
-        <button type="submit">发送</button>
-    </form>
-    {% else %}
-    <p style="text-align:center;margin-top:14px;font-size:14px"><a href="/login" style="color:var(--rose)">登录</a> 后可以留言</p>
-    {% endif %}
 </section>
 
 <script>

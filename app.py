@@ -230,15 +230,7 @@ def get_current_user():
 @app.route('/')
 def index():
     anniversaries = db_execute('SELECT * FROM anniversaries ORDER BY date', fetch=True)
-    timelines = db_execute('SELECT * FROM timeline ORDER BY date DESC', fetch=True)
-    photos = db_execute('SELECT * FROM photos ORDER BY created_at DESC', fetch=True)
-    messages = db_execute(
-        '''SELECT m.*, u.nickname, u.avatar_data FROM messages m
-           JOIN users u ON m.user_id = u.id ORDER BY m.created_at ASC''',
-        fetch=True
-    )
     user = get_current_user()
-
     today = date.today()
 
     together_date = datetime.strptime(COUPLE['together'], '%Y-%m-%d').date()
@@ -260,12 +252,32 @@ def index():
     b2_days, b2_age = birthday_countdown(COUPLE['girl']['birthday'])
 
     return render_template('index.html',
-        user=user, timelines=timelines, photos=photos, messages=messages,
+        user=user,
         countdown_days=countdown_days, countdown_title=countdown_title,
         days_together=days_together,
         b1_days=b1_days, b1_age=b1_age, b1_zodiac=COUPLE['boy']['zodiac'], b1_zemoji=COUPLE['boy']['zodiac_emoji'],
         b2_days=b2_days, b2_age=b2_age, b2_zodiac=COUPLE['girl']['zodiac'], b2_zemoji=COUPLE['girl']['zodiac_emoji'],
         boy=COUPLE['boy'], girl=COUPLE['girl'], together=COUPLE['together'])
+
+@app.route('/timeline')
+def timeline_page():
+    timelines = db_execute('SELECT * FROM timeline ORDER BY date DESC', fetch=True)
+    return render_template('timeline.html', user=get_current_user(), timelines=timelines)
+
+@app.route('/photos')
+def photos_page():
+    photos = db_execute('SELECT * FROM photos ORDER BY created_at DESC', fetch=True)
+    return render_template('photos.html', user=get_current_user(), photos=photos)
+
+@app.route('/messages')
+@login_required
+def messages_page():
+    messages = db_execute(
+        '''SELECT m.*, u.nickname, u.avatar_data FROM messages m
+           JOIN users u ON m.user_id = u.id ORDER BY m.created_at ASC''',
+        fetch=True
+    )
+    return render_template('messages.html', user=get_current_user(), messages=messages)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():

@@ -900,6 +900,171 @@ nav {
 .admin-list-item:last-child { border-bottom: none; }
 .admin-list-item .meta { color: var(--text-dim); font-size: 12px; }
 
+/* ===== ACTIVE NAV ===== */
+.nav-links a.active {
+    color: var(--rose-light);
+    text-shadow: 0 0 10px rgba(240, 176, 190, 0.3);
+}
+
+/* ===== PAGE SECTION (timeline / photos) ===== */
+.page-section {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== WHISPER (悄悄话) ===== */
+.whisper-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px);
+}
+
+.whisper-header {
+    text-align: center;
+    padding: 16px 0 20px;
+    flex-shrink: 0;
+}
+.whisper-header h2 {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--rose-light);
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(240, 176, 190, 0.25);
+}
+.whisper-header p {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+
+.whisper-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.whisper-messages::-webkit-scrollbar { width: 4px; }
+.whisper-messages::-webkit-scrollbar-thumb { background: rgba(240,176,190,0.2); border-radius: 4px; }
+
+.whisper-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: msgIn 0.4s ease;
+}
+.whisper-row.me {
+    flex-direction: row-reverse;
+}
+.whisper-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(240, 176, 190, 0.25);
+}
+.whisper-content {
+    max-width: 70%;
+}
+.whisper-bubble {
+    padding: 12px 18px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+.whisper-row:not(.me) .whisper-bubble {
+    background: rgba(240, 176, 190, 0.1);
+    border: 1px solid rgba(240, 176, 190, 0.15);
+    border-bottom-left-radius: 6px;
+    color: var(--text);
+}
+.whisper-row.me .whisper-bubble {
+    background: linear-gradient(135deg, rgba(224, 136, 152, 0.25), rgba(210, 120, 140, 0.2));
+    border: 1px solid rgba(224, 136, 152, 0.3);
+    border-bottom-right-radius: 6px;
+    color: var(--text);
+}
+.whisper-meta {
+    font-size: 11px;
+    color: rgba(242, 230, 234, 0.3);
+    margin-top: 4px;
+    padding: 0 4px;
+}
+.whisper-row.me .whisper-meta {
+    text-align: right;
+}
+
+/* Whisper empty state */
+.whisper-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+}
+.whisper-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+.whisper-empty p {
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+.whisper-empty-sub {
+    font-size: 12px;
+    color: rgba(242, 230, 234, 0.3);
+}
+
+/* Whisper input area */
+.whisper-form {
+    display: flex;
+    gap: 10px;
+    padding: 14px 0 20px;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(240, 176, 190, 0.1);
+}
+.whisper-form input {
+    flex: 1;
+    padding: 13px 20px;
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    font-size: 15px;
+    font-family: var(--sans);
+    outline: none;
+    background: rgba(25, 13, 20, 0.85);
+    color: var(--text);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+.whisper-form input::placeholder { color: rgba(242, 230, 234, 0.3); }
+.whisper-form input:focus { border-color: var(--rose); box-shadow: 0 0 20px rgba(240, 176, 190, 0.15); }
+.whisper-form button {
+    padding: 12px 26px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, var(--rose-deep), #D07080);
+    color: #fff;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: var(--sans);
+    letter-spacing: 1px;
+    transition: filter 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 16px rgba(224, 136, 152, 0.25);
+}
+.whisper-form button:hover { filter: brightness(1.08); box-shadow: 0 6px 22px rgba(224, 136, 152, 0.4); }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 640px) {
     nav { padding: 10px 16px; }
@@ -926,4 +1091,10 @@ nav {
     .admin-section form textarea { width: 100%; }
     .floating-hearts .heart { display: none; }
     .floating-hearts .heart:nth-child(odd) { display: block; }
+    .whisper-wrapper { padding: 10px 12px; height: calc(100vh - 60px); }
+    .whisper-content { max-width: 82%; }
+    .whisper-form { padding: 10px 0 14px; }
+    .whisper-form input { padding: 11px 16px; font-size: 14px; }
+    .whisper-form button { padding: 10px 18px; font-size: 13px; }
+    .page-section { padding: 40px 16px; }
 }

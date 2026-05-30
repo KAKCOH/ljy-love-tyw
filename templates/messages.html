@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悄悄话 · Love you day and night</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
+</head>
+<body>
+
+<nav>
+    <a href="/" class="nav-brand">Love you day and night</a>
+    <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="/timeline">时光轴</a>
+        <a href="/photos">照片</a>
+        <a href="/messages" class="active">悄悄话</a>
+        <a href="/admin">管理</a>
+        <a href="/settings">
+            <img src="/avatar/{{ user.id }}" class="nav-avatar" alt="头像" onerror="this.style.display='none'">
+        </a>
+        <a href="/logout" class="btn btn-outline btn-sm">退出</a>
+    </div>
+</nav>
+
+<div class="whisper-wrapper">
+    <div class="whisper-header">
+        <h2>悄悄话</h2>
+        <p>只有你们两个人看得见</p>
+    </div>
+
+    <div class="whisper-messages" id="whisperMessages">
+        {% for m in messages %}
+        <div class="whisper-row {% if m.user_id == user.id %}me{% endif %}">
+            <img src="/avatar/{{ m.user_id }}" class="whisper-avatar" alt="" onerror="this.style.display='none'">
+            <div class="whisper-content">
+                <div class="whisper-bubble">{{ m.content }}</div>
+                <div class="whisper-meta">{{ m.nickname }} · {{ m.created_at|datetimestr }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="whisper-empty">
+            <div class="whisper-empty-icon">💌</div>
+            <p>还没有悄悄话</p>
+            <p class="whisper-empty-sub">说点什么吧，只有你们两个人看得见</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form class="whisper-form" method="POST" action="/message/send">
+        <input name="content" placeholder="说句悄悄话..." autocomplete="off" required>
+        <button type="submit">发送</button>
+    </form>
+</div>
+
+<script>
+// Auto-scroll to bottom
+(function() {
+    const el = document.getElementById('whisperMessages');
+    if (el) el.scrollTop = el.scrollHeight;
+})();
+</script>
+
+</body>
+</html>
