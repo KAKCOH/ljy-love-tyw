@@ -494,10 +494,15 @@ def send_push_to_user(to_user_id, title, body, tag):
     subs = db_execute('SELECT subscription_json FROM push_subscriptions WHERE user_id=?',
         (to_user_id,), fetch=True)
     if not subs:
+        print(f'[push] no subscriptions found for user {to_user_id}', flush=True)
         return
     try:
         from pywebpush import webpush, WebPushException
-    except ImportError:
+    except ImportError as ie:
+        print(f'[push] pywebpush import failed: {ie}', flush=True)
+        return
+    if not VAPID_PRIVATE_KEY:
+        print('[push] VAPID_PRIVATE_KEY is empty, cannot send', flush=True)
         return
     for s in subs:
         try:
@@ -507,8 +512,9 @@ def send_push_to_user(to_user_id, title, body, tag):
                 vapid_private_key=VAPID_PRIVATE_KEY,
                 vapid_claims={'sub': 'mailto:lovetimeline@app.local'}
             )
-        except Exception:
-            pass  # expired subscription or network error
+            print(f'[push] sent to user {to_user_id}: {title}', flush=True)
+        except Exception as e:
+            print(f'[push] send failed: {type(e).__name__}: {e}', flush=True)
 
 
 @app.route('/message/send', methods=['POST'])
@@ -558,15 +564,20 @@ def get_other_user_id():
 def push_subscribe():
     data = request.get_json()
     if data:
-        if USE_POSTGRES:
-            db_execute(
-                'INSERT INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?) '
-                'ON CONFLICT (user_id, subscription_json) DO NOTHING',
-                (session['user_id'], json.dumps(data)), commit=True)
-        else:
-            db_execute(
-                'INSERT OR IGNORE INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?)',
-                (session['user_id'], json.dumps(data)), commit=True)
+        endpoint = data.get('endpoint', '')[:80] if data else ''
+        try:
+            if USE_POSTGRES:
+                db_execute(
+                    'INSERT INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?) '
+                    'ON CONFLICT (user_id, subscription_json) DO NOTHING',
+                    (session['user_id'], json.dumps(data)), commit=True)
+            else:
+                db_execute(
+                    'INSERT OR IGNORE INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?)',
+                    (session['user_id'], json.dumps(data)), commit=True)
+            print(f'[push] subscription saved for user {session["user_id"]}: {endpoint}...', flush=True)
+        except Exception as e:
+            print(f'[push] subscribe error: {type(e).__name__}: {e}', flush=True)
     return '', 200
 
 
