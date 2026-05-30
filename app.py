@@ -1,6 +1,6 @@
 import os
 import base64
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, Response
 from werkzeug.utils import secure_filename
@@ -9,18 +9,21 @@ app = Flask(__name__)
 app.secret_key = 'lovetimeline-secret-key-2026'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
+# Render PostgreSQL stores UTC; local SQLite stores local (China) time
+_TZ_OFFSET = timedelta(hours=8) if os.environ.get('DATABASE_URL', '').startswith('postgres') else timedelta(0)
+
 @app.template_filter('datestr')
 def datestr(value):
     """Format a datetime or string to YYYY-MM-DD for templates."""
     if hasattr(value, 'strftime'):
-        return value.strftime('%Y-%m-%d')
+        return (value + _TZ_OFFSET).strftime('%Y-%m-%d')
     return str(value)[:10]
 
 @app.template_filter('datetimestr')
 def datetimestr(value):
     """Format a datetime or string to YYYY-MM-DD HH:MM for templates."""
     if hasattr(value, 'strftime'):
-        return value.strftime('%Y-%m-%d %H:%M')
+        return (value + _TZ_OFFSET).strftime('%Y-%m-%d %H:%M')
     return str(value)[:16]
 
 # ---------- couple info ----------
