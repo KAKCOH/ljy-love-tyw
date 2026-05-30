@@ -558,9 +558,15 @@ def get_other_user_id():
 def push_subscribe():
     data = request.get_json()
     if data:
-        db_execute(
-            'INSERT OR IGNORE INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?)',
-            (session['user_id'], json.dumps(data)), commit=True)
+        if USE_POSTGRES:
+            db_execute(
+                'INSERT INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?) '
+                'ON CONFLICT (user_id, subscription_json) DO NOTHING',
+                (session['user_id'], json.dumps(data)), commit=True)
+        else:
+            db_execute(
+                'INSERT OR IGNORE INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?)',
+                (session['user_id'], json.dumps(data)), commit=True)
     return '', 200
 
 
