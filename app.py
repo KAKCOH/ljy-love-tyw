@@ -10,30 +10,9 @@ app = Flask(__name__)
 app.secret_key = 'lovetimeline-secret-key-2026'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
-# --- VAPID keys for Web Push ---
-_VAPID_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.vapid_keys')
-try:
-    from py_vapid import Vapid
-    from cryptography.hazmat.primitives import serialization
-    if os.path.exists(_VAPID_FILE):
-        v = Vapid.from_file(_VAPID_FILE)
-    else:
-        v = Vapid()
-        v.generate_keys()
-        v.save_key(_VAPID_FILE)
-    VAPID_PRIVATE_KEY = v.private_pem()
-    _raw_pub = v.public_key.public_bytes(
-        encoding=serialization.Encoding.X962,
-        format=serialization.PublicFormat.UncompressedPoint
-    )
-    VAPID_PUBLIC_KEY = base64.urlsafe_b64encode(_raw_pub).rstrip(b'=').decode()
-except ImportError:
-    VAPID_PRIVATE_KEY = ''
-    VAPID_PUBLIC_KEY = ''
-
 @app.context_processor
 def inject_globals():
-    return {'vapid_public_key': VAPID_PUBLIC_KEY, 'user': get_current_user()}
+    return {'user': get_current_user()}
 
 # Render PostgreSQL stores UTC; local SQLite stores local (China) time
 _TZ_OFFSET = timedelta(hours=8) if os.environ.get('DATABASE_URL', '').startswith('postgres') else timedelta(0)
@@ -190,15 +169,6 @@ def init_db():
                 completed_at TIMESTAMP DEFAULT NULL
             )
         ''')
-        cur.execute('''
-            CREATE TABLE IF NOT EXISTS push_subscriptions (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id),
-                subscription_json TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, subscription_json)
-            )
-        ''')
         db.commit()
         # Seed users only if not exists
         cur.execute("SELECT COUNT(*) FROM users")
@@ -280,16 +250,6 @@ def init_db():
                 completed_at TIMESTAMP DEFAULT NULL,
                 FOREIGN KEY (from_user_id) REFERENCES users(id),
                 FOREIGN KEY (to_user_id) REFERENCES users(id)
-            )
-        ''')
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS push_subscriptions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                subscription_json TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, subscription_json),
-                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
         db.commit()
@@ -489,34 +449,6 @@ def delete_photo(id):
     db_execute('DELETE FROM photos WHERE id=?', (id,), commit=True)
     return redirect(url_for('admin'))
 
-def send_push_to_user(to_user_id, title, body, tag):
-    """Send Web Push notification to all devices of a user."""
-    subs = db_execute('SELECT subscription_json FROM push_subscriptions WHERE user_id=?',
-        (to_user_id,), fetch=True)
-    if not subs:
-        print(f'[push] no subscriptions found for user {to_user_id}', flush=True)
-        return
-    try:
-        from pywebpush import webpush, WebPushException
-    except ImportError as ie:
-        print(f'[push] pywebpush import failed: {ie}', flush=True)
-        return
-    if not VAPID_PRIVATE_KEY:
-        print('[push] VAPID_PRIVATE_KEY is empty, cannot send', flush=True)
-        return
-    for s in subs:
-        try:
-            webpush(
-                subscription_info=json.loads(s['subscription_json']),
-                data=json.dumps({'title': title, 'body': body, 'tag': tag}),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={'sub': 'mailto:lovetimeline@app.local'}
-            )
-            print(f'[push] sent to user {to_user_id}: {title}', flush=True)
-        except Exception as e:
-            print(f'[push] send failed: {type(e).__name__}: {e}', flush=True)
-
-
 @app.route('/message/send', methods=['POST'])
 @login_required
 def send_message():
@@ -532,11 +464,6 @@ def send_message():
     if content or image_data:
         db_execute('INSERT INTO messages (user_id, content, image_data, image_mimetype) VALUES (?, ?, ?, ?)',
             (session['user_id'], content or '', image_data, image_mimetype), commit=True)
-        to_id = get_other_user_id()
-        if to_id:
-            user = get_current_user()
-            preview = content[:60] if content else '[图片]'
-            send_push_to_user(to_id, user['nickname'] or '对方', preview, 'new_msg')
     return redirect(url_for('messages_page'))
 
 @app.route('/message/image/<int:mid>')
@@ -559,27 +486,6 @@ def get_other_user_id():
     users = db_execute('SELECT id FROM users WHERE id!=?', (session['user_id'],), fetch=True)
     return users[0]['id'] if users else None
 
-@app.route('/push/subscribe', methods=['POST'])
-@login_required
-def push_subscribe():
-    data = request.get_json()
-    if data:
-        endpoint = data.get('endpoint', '')[:80] if data else ''
-        try:
-            if USE_POSTGRES:
-                db_execute(
-                    'INSERT INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?) '
-                    'ON CONFLICT (user_id, subscription_json) DO NOTHING',
-                    (session['user_id'], json.dumps(data)), commit=True)
-            else:
-                db_execute(
-                    'INSERT OR IGNORE INTO push_subscriptions (user_id, subscription_json) VALUES (?, ?)',
-                    (session['user_id'], json.dumps(data)), commit=True)
-            print(f'[push] subscription saved for user {session["user_id"]}: {endpoint}...', flush=True)
-        except Exception as e:
-            print(f'[push] subscribe error: {type(e).__name__}: {e}', flush=True)
-    return '', 200
-
 
 @app.route('/special/send', methods=['POST'])
 @login_required
@@ -590,9 +496,6 @@ def send_special():
         db_execute(
             'INSERT INTO special_messages (from_user_id, to_user_id, type, content) VALUES (?, ?, ?, ?)',
             (session['user_id'], to_id, sp_type, request.form.get('content', '')), commit=True)
-        user = get_current_user()
-        label = '想见你' if sp_type == 'meet' else '有任务'
-        send_push_to_user(to_id, label, user['nickname'] + '发来了一条' + label, 'new_special')
     return redirect(url_for('messages_page'))
 
 @app.route('/special/respond/<int:id>', methods=['POST'])
@@ -605,9 +508,6 @@ def respond_special(id):
         meet_time = request.form.get('meet_time', '')
         db_execute("UPDATE special_messages SET status=?, meet_time=?, completed_at=CURRENT_TIMESTAMP WHERE id=?",
             (status, meet_time, id), commit=True)
-        user = get_current_user()
-        send_push_to_user(sp['from_user_id'], '见面请求已回复',
-            user['nickname'] + ('同意了' if status == 'accepted' else '拒绝了') + '见面请求', 'meet_resp')
     return redirect(url_for('messages_page'))
 
 @app.route('/special/done/<int:id>', methods=['POST'])
@@ -618,9 +518,6 @@ def done_special(id):
     if sp and sp['type'] == 'task' and sp['status'] == 'pending':
         db_execute("UPDATE special_messages SET status='done', completed_at=CURRENT_TIMESTAMP WHERE id=?",
             (id,), commit=True)
-        user = get_current_user()
-        send_push_to_user(sp['from_user_id'], '任务已完成',
-            user['nickname'] + '完成了任务', 'task_done')
     return redirect(url_for('messages_page'))
 
 init_db()

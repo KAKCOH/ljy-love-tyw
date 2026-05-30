@@ -36,13 +36,6 @@
         <p>只有你们两个人看得见</p>
     </div>
 
-    <!-- Notification permission banner -->
-    <div class="notify-banner" id="notifyBanner" style="display:none">
-        <span>新消息通知</span>
-        <button class="btn btn-primary btn-sm" id="notifyEnableBtn">开启</button>
-        <button class="notify-close" id="notifyCloseBtn">&times;</button>
-    </div>
-
     <!-- Pinned special messages -->
     {% set active_specials = specials|selectattr('status', 'equalto', 'pending')|list %}
     {% if active_specials %}
@@ -255,55 +248,9 @@ document.getElementById('specialOverlay').addEventListener('click', function(e) 
 </script>
 
 <script>
-var _swReg = null;
-
-function subscribePush() {
-    if (!_swReg) return;
-    var key = '{{ vapid_public_key }}';
-    var convKey = function(b64) {
-        var pad = '='.repeat((4 - b64.length % 4) % 4);
-        var raw = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + pad);
-        var out = new Uint8Array(raw.length);
-        for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-        return out;
-    };
-    _swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: convKey(key) })
-        .then(function(sub) {
-            if (sub) {
-                fetch('/push/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(sub)
-                });
-            }
-        }).catch(function() {});
-    document.getElementById('notifyBanner').style.display = 'none';
-}
-
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-        _swReg = reg;
-        if ('PushManager' in window && 'Notification' in window) {
-            if (Notification.permission === 'default') {
-                document.getElementById('notifyBanner').style.display = 'flex';
-            } else if (Notification.permission === 'granted') {
-                reg.pushManager.getSubscription().then(function(sub) {
-                    if (!sub) subscribePush();
-                });
-            }
-        }
-    });
+    navigator.serviceWorker.register('/sw.js');
 }
-
-document.getElementById('notifyEnableBtn').addEventListener('click', function() {
-    Notification.requestPermission().then(function(perm) {
-        if (perm === 'granted') subscribePush();
-        else document.getElementById('notifyBanner').style.display = 'none';
-    });
-});
-document.getElementById('notifyCloseBtn').addEventListener('click', function() {
-    document.getElementById('notifyBanner').style.display = 'none';
-});
 </script>
 </body>
 </html>
